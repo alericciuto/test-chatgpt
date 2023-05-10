@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Consigliatore di film</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h1>Consigliatore di film</h1>
+<form id="movieForm">
+    <label for="genre">Genere preferito:</label>
+    <input type="text" id="genre" name="genre"><br><br>
+
+    <label for="actor">Attore/Attrice preferito/a:</label>
+    <input type="text" id="actor" name="actor"><br><br>
+
+    <label for="director">Regista preferito:</label>
+    <input type="text" id="director" name="director"><br><br>
+
+    <input type="submit" value="Consiglia film">
+</form>
+
+<div id="results"></div>
+
+<script>
+    // Funzione per ottenere le raccomandazioni dei film dal modello GPT-3
+    async function  getMovieRecommendations(request)  {
+        // Chiamata all'API di OpenAI per ottenere le raccomandazioni
+        fetch(
+            "http://localhost:3001/api/chatgpt",
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(request)
+            }
+        ).then(response => {
+            response.json()
+                .then(body => {
+                    if (!response.ok){
+                        displayError(body);
+                    }else{
+                        displayMovieRecommendations(body);
+                    }
+                })
+                .catch(err => {
+                    displayError(err);
+                });
+        }).catch(err => {
+            displayError(err);
+        });
+    }
+
+
+    // Funzione per visualizzare le raccomandazioni dei film nella pagina
+    function displayMovieRecommendations(results) {
+        var output = "<h2 style='color:green'>Raccomandazioni:</h2>\n" + JSON.stringify(results);
+        $("#results").html(output);
+    }
+
+    function displayError(error){
+        var output = "<h2 style='color:red'>Error:</h2>\n" + JSON.stringify(error);
+        $("#results").html(output);
+    }
+
+    // Funzione di gestione dell'invio del modulo
+    $(document).ready(function() {
+        $("#movieForm").submit( async function(e) {
+            e.preventDefault();
+
+            var genre = $("#genre").val();
+            var actor = $("#actor").val();
+            var director = $("#director").val();
+
+            // Chiamata alla funzione per ottenere le raccomandazioni dei film
+            await getMovieRecommendations({
+                genre: genre, 
+                actor: actor, 
+                director: director
+            });
+        });
+    });
+</script>
+</body>
+</html>
